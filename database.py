@@ -33,6 +33,17 @@ def init_db():
                     "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
                     (username, email, password_hash, role)
                 )
+
+        cursor.execute(
+            """
+            UPDATE resources
+            SET status = CASE
+                WHEN lower(status) = 'available' THEN 'free'
+                WHEN lower(status) = 'unavailable' THEN 'maintenance'
+                ELSE status
+            END
+            """
+        )
         conn.commit()
 
     if db_exists:

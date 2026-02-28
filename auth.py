@@ -2,6 +2,15 @@ import os
 import sqlite3
 from flask import Blueprint, request, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from scheduler.service import (
+    get_pending_requests,
+    get_free_resources,
+    update_request_status,
+    update_resource_status,
+    insert_assignment,
+    insert_log,
+)
+from scheduler.os_engine import priority_scheduler
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -240,12 +249,21 @@ def get_requests():
                 "priority_level": priority_level,
                 "location": row["location"] or "N/A",
                 "description": row["description"] or "",
-                "status": (row["status"] or "pending").title(),
+                "status": (row["status"] or "pending").strip().lower(),
                 "created_at": row["created_at"],
             }
         )
 
     return jsonify({"requests": requests_payload}), 200
+
+
+@auth_bp.route("/api/requests/pending", methods=["GET"])
+def get_pending_requests_route():
+    if session.get("role") != "ADMIN":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    pending_requests = get_pending_requests()
+    return jsonify({"requests": pending_requests}), 200
 
 
 @auth_bp.route("/api/resources", methods=["GET"])
@@ -266,7 +284,14 @@ def get_resources():
     resources_payload = []
     for row in rows:
         raw_status = (row["status"] or "free").strip().lower()
-        status = "Available" if raw_status in {"free", "available"} else "Unavailable"
+        if raw_status == "available":
+            raw_status = "free"
+        elif raw_status == "unavailable":
+            raw_status = "maintenance"
+
+        if raw_status not in {"free", "busy", "maintenance"}:
+            raw_status = "maintenance"
+
         resources_payload.append(
             {
                 "id": row["id"],
@@ -274,7 +299,7 @@ def get_resources():
                 "name": row["name"],
                 "type": row["resource_type"],
                 "zone": "N/A",
-                "status": status,
+                "status": raw_status,
             }
         )
 
@@ -326,6 +351,9 @@ def get_assignments():
 def create_request():
     data = request.get_json(silent=True) or {}
 
+    if session.get("role") != "USER":
+        return jsonify({"error": "Unauthorized"}), 403
+
     complaint_type = (data.get("complaint_type") or "").strip()
     description = (data.get("description") or "").strip()
     location = (data.get("location") or "").strip()
@@ -354,14 +382,33 @@ def create_request():
     return jsonify({"message": "Request submitted", "id": created_id}), 201
 
 
-@auth_bp.route("/api/run_scheduler", methods=["POST", "GET"])
+@auth_bp.route("/api/run_scheduler", methods=["POST"])
 def run_scheduler():
     if session.get("role") != "ADMIN":
         return jsonify({"error": "Unauthorized"}), 403
+
+    pending_requests = get_pending_requests()
+    free_resources = get_free_resources()
+    assignments = priority_scheduler(pending_requests, free_resources)
+
+    if not assignments:
+        return jsonify({"message": "No assignments generated"}), 200
+
+    for assignment in assignments:
+        request_id = assignment.get("request_id")
+        resource_id = assignment.get("resource_id")
+        if request_id is None or resource_id is None:
+            continue
+
+        update_request_status(request_id, "scheduled")
+        update_resource_status(resource_id, "busy")
+        insert_assignment(request_id, resource_id, "priority")
+        insert_log(f"Assigned request {request_id} to resource {resource_id} using priority")
+
     return jsonify({"message": "Success"}), 200
 
 
-@auth_bp.route("/api/resources/update", methods=["POST", "PUT"])
+@auth_bp.route("/api/resources/update-status", methods=["POST"])
 def resources_update():
     if session.get("role") != "ADMIN":
         return jsonify({"error": "Unauthorized"}), 403
@@ -373,8 +420,8 @@ def resources_update():
     if resource_value is None:
         return jsonify({"error": "resource_id is required"}), 400
 
-    if status_value not in {"available", "unavailable"}:
-        return jsonify({"error": "status must be Available or Unavailable"}), 400
+    if status_value not in {"free", "busy", "maintenance"}:
+        return jsonify({"error": "status must be free, busy, or maintenance"}), 400
 
     resource_id = None
     if isinstance(resource_value, int):
@@ -391,16 +438,7 @@ def resources_update():
     if resource_id is None:
         return jsonify({"error": "invalid resource_id"}), 400
 
-    db_status = "available" if status_value == "available" else "unavailable"
-
-    conn = get_db_connection()
-    cursor = conn.execute(
-        "UPDATE resources SET status = ? WHERE id = ?",
-        (db_status, resource_id),
-    )
-    conn.commit()
-    updated_rows = cursor.rowcount
-    conn.close()
+    updated_rows = update_resource_status(resource_id, status_value)
 
     if updated_rows == 0:
         return jsonify({"error": "resource not found"}), 404
@@ -458,7 +496,7 @@ def get_my_requests():
                 "priority_level": priority_level,
                 "location": row["location"] or "N/A",
                 "description": row["description"] or "",
-                "status": (row["status"] or "pending").title(),
+                "status": (row["status"] or "pending").strip().lower(),
                 "created_at": row["created_at"],
             }
         )

@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type ResourceStatus = "Available" | "Unavailable"
+type ResourceStatus = "free" | "busy" | "maintenance"
 
 type ResourceItem = {
   id: number
@@ -35,13 +35,30 @@ type ResourceItem = {
   status: string
 }
 
-const allowedStatuses: ResourceStatus[] = [
-  "Available",
-  "Unavailable",
-]
+const allowedStatuses: ResourceStatus[] = ["free", "busy", "maintenance"]
+
+const statusLabels: Record<ResourceStatus, string> = {
+  free: "Free",
+  busy: "Busy",
+  maintenance: "Maintenance",
+}
 
 function normalizeStatus(status: string): ResourceStatus {
-  return status === "Available" ? "Available" : "Unavailable"
+  const normalized = status.trim().toLowerCase()
+
+  if (normalized === "free" || normalized === "busy" || normalized === "maintenance") {
+    return normalized
+  }
+
+  if (normalized === "available") {
+    return "free"
+  }
+
+  if (normalized === "unavailable") {
+    return "maintenance"
+  }
+
+  return "maintenance"
 }
 
 export function ManageResourcesView() {
@@ -123,7 +140,7 @@ export function ManageResourcesView() {
         setErrorMessage("")
         setUpdatingResourceId(resource.id)
 
-        const response = await fetch(`${apiBaseUrl}/api/resources/update`, {
+        const response = await fetch(`${apiBaseUrl}/api/resources/update-status`, {
           method: "POST",
           credentials: "include",
           headers: {
@@ -191,7 +208,7 @@ export function ManageResourcesView() {
                     <TableRow key={resource.id}>
                       <TableCell className="font-medium">{resource.name}</TableCell>
                       <TableCell>{resource.type}</TableCell>
-                      <TableCell>{statusValue}</TableCell>
+                      <TableCell>{statusLabels[statusValue]}</TableCell>
                       <TableCell>
                         <Select
                           value={statusValue}
@@ -206,7 +223,7 @@ export function ManageResourcesView() {
                           <SelectContent>
                             {allowedStatuses.map((statusOption) => (
                               <SelectItem key={statusOption} value={statusOption}>
-                                {statusOption}
+                                {statusLabels[statusOption]}
                               </SelectItem>
                             ))}
                           </SelectContent>
