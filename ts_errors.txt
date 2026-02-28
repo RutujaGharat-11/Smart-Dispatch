@@ -1,0 +1,54 @@
+components/dashboard/scheduler-panel.tsx(4,22): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/dashboard/stats-cards.tsx(1,54): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/home/features-section.tsx(1,38): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/home/hero-section.tsx(2,45): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/home/how-it-works-section.tsx(1,32): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/navbar.tsx(7,33): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/request/request-form.tsx(4,30): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/accordion.tsx(5,33): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/breadcrumb.tsx(3,46): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/calendar.tsx(8,8): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/carousel.tsx(7,39): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/checkbox.tsx(5,27): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/command.tsx(5,28): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/context-menu.tsx(5,57): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/dialog.tsx(5,23): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/dropdown-menu.tsx(5,57): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/input-otp.tsx(5,27): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/menubar.tsx(5,57): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/navigation-menu.tsx(4,33): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/pagination.tsx(6,8): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/radio-group.tsx(5,28): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/resizable.tsx(4,34): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/select.tsx(5,59): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/sheet.tsx(5,23): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/sidebar.tsx(6,31): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/spinner.tsx(1,29): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
+components/ui/toast.tsx(6,19): error TS7016: Could not find a declaration file for module 'lucide-react'. 'D:/DPRS/node_modules/lucide-react/dist/cjs/lucide-react.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lucide-react` if it exists or add a new declaration (.d.ts) file containing `declare module 'lucide-react';`
