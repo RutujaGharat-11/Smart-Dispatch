@@ -1,84 +1,127 @@
 # 🚀 SmartDispatch
 
-SmartDispatch is a role-based public resource scheduling system that applies Operating System scheduling concepts to real-world governance problems.  
+SmartDispatch is a role-based public resource scheduling platform with:
+- **Next.js (App Router)** frontend
+- **Flask + SQLite** backend
 
-It enables citizens to submit public service requests while administrators manage resource availability and apply scheduling algorithms such as Priority Scheduling and Shortest Job First (SJF) for optimized allocation.
-
----
-
-## 🎯 Problem Statement
-
-Public resources like garbage trucks, water tankers, and emergency vehicles are often underutilized or poorly scheduled due to inefficient allocation systems.
-
-SmartDispatch solves this by:
-- Treating service requests as processes
-- Treating resources as system components
-- Applying OS scheduling algorithms for optimized assignment
+Users can submit requests and track their own request status. Admins can monitor requests, manage resource availability, and run scheduling operations.
 
 ---
 
-## 👥 Roles & Access Control
+## ✨ Features
 
-### 👤 User
-- Create account
-- Login
-- Submit service requests
-- View personal request status
-
-### 👨‍💼 Admin
-- Login (pre-seeded accounts only)
-- View all requests
-- Manage resource availability
-- Run scheduling algorithms
-- View assignment logs
-
----
-
-## 🧠 Core Features
-
-- 🔐 Role-Based Authentication (RBAC)
-- 📩 Request Submission System
-- 📊 Admin Dashboard
-- 🚛 Resource Management Module
-- ⚙ OS Scheduling Algorithms:
-  - Priority Scheduling
-  - Shortest Job First (SJF)
-  - Greedy Allocation
-- 📈 Activity Logs
-- 🗂 SQLite Database Integration
+- Role-based login (`USER` / `ADMIN`)
+- Session-based authentication (Flask sessions with cookies)
+- Request submission workflow for users
+- Admin dashboard with requests/resources/assignments
+- Manage Resources page with status controls
+- Scheduler trigger endpoint
 
 ---
 
 ## 🛠 Tech Stack
 
-**Frontend**
-- Next.js (App Router)
-- React
-- CSS / Tailwind / Bootstrap (if used)
-
-**Backend**
-- Flask
-- SQLite
-- Flask Sessions
-- Flask-CORS
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS, Bootstrap UI classes in selected pages
+- **Backend:** Flask, SQLite, Flask-CORS, Werkzeug password hashing
 
 ---
 
-## 🗂 Project Structure
-backend/
-│
-├── app.py
-├── database.py
-├── scheduler/
-│ ├── os_engine.py
-│ ├── aoa_engine.py
-│
-frontend/
-│
-├── app/
-│ ├── login/
-│ ├── create-account/
-│ ├── dashboard/
-│ ├── user-dashboard/
-│ ├── manage-resources/
+## 📁 Project Structure (current)
+
+```text
+app.py
+auth.py
+database.py
+schema.sql
+
+app/
+  layout.tsx
+  page.tsx
+  login/page.jsx
+  signup/page.jsx
+  create-account/page.jsx
+  request/page.tsx
+  dashboard/page.tsx
+  manage-resources/page.tsx
+  user-dashboard/page.tsx
+
+components/
+  navbar.tsx
+  dashboard/*
+  request/*
+  home/*
+```
+
+---
+
+## 👥 Roles
+
+### USER
+- Create account
+- Login as USER
+- Submit request
+- View personal requests on User Dashboard
+
+### ADMIN
+- Login as ADMIN
+- View admin dashboard
+- Manage resources (`Available` / `Unavailable`)
+- Run scheduler
+
+---
+
+## ▶️ Run Locally
+
+### 1) Backend (Flask)
+
+```bash
+# from project root
+python -m venv .venv
+.venv\Scripts\activate
+pip install flask flask-cors werkzeug
+python app.py
+```
+
+Backend runs at: `http://localhost:5000`
+
+### 2) Frontend (Next.js)
+
+```bash
+# from project root
+npm install
+npm run dev
+```
+
+Frontend runs at: `http://localhost:3000`
+
+---
+
+## 🔐 Auth Notes
+
+- Frontend expects backend base URL through `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:5000` in code).
+- Login endpoint: `/api/login`
+- Check session endpoint: `/api/check-auth`
+- Logout endpoint: `/api/logout`
+
+---
+
+## 🌿 Git Workflow for This Repo
+
+This local folder is connected to:
+
+`https://github.com/RutujaGharat-11/Smart-Dispatch`
+
+Use this standard flow:
+
+```bash
+git add .
+git commit -m "your message"
+git push
+```
+
+---
+
+## 📌 Branch
+
+- Default working branch is `main`.
 
