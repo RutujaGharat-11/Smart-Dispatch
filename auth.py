@@ -1,16 +1,17 @@
 import os
 import sqlite3
+import traceback
 from flask import Blueprint, request, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from scheduler.service import (
     get_pending_requests,
     get_free_resources,
-    update_request_status,
     update_resource_status,
-    insert_assignment,
-    insert_log,
+    apply_scheduler_assignments,
+    complete_request_and_release_resource,
+    get_activity_logs,
 )
-from scheduler.os_engine import priority_scheduler
+from scheduler.os_engine import priority_scheduler, sjf_scheduler, greedy_scheduler
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -21,23 +22,6 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-def init_db():
-    conn = get_db_connection()
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
-    conn.commit()
-    conn.close()
 
 # Temporary admin user (later DB)
 ADMIN_USER = {
@@ -123,6 +107,9 @@ def get_or_create_admin_user_id(conn, username):
 
 @auth_bp.route("/api/register", methods=["POST"])
 def register():
+    if session.get("role") == "ADMIN":
+        return jsonify({"error": "Admins cannot create accounts through signup"}), 403
+
     data = request.get_json(silent=True) or {}
 
     username = (data.get("username") or "").strip()
@@ -144,8 +131,8 @@ def register():
 
     password_hash = generate_password_hash(password)
     conn.execute(
-        "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-        (username, email, password_hash),
+        "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
+        (username, email, password_hash, "USER"),
     )
     conn.commit()
     conn.close()
@@ -284,11 +271,6 @@ def get_resources():
     resources_payload = []
     for row in rows:
         raw_status = (row["status"] or "free").strip().lower()
-        if raw_status == "available":
-            raw_status = "free"
-        elif raw_status == "unavailable":
-            raw_status = "maintenance"
-
         if raw_status not in {"free", "busy", "maintenance"}:
             raw_status = "maintenance"
 
@@ -297,6 +279,7 @@ def get_resources():
                 "id": row["id"],
                 "resource_id": f"RES-{row['id']:02d}",
                 "name": row["name"],
+                "resource_type": row["resource_type"],
                 "type": row["resource_type"],
                 "zone": "N/A",
                 "status": raw_status,
@@ -321,6 +304,8 @@ def get_assignments():
             a.algorithm_used,
             a.assigned_at,
             r.complaint_type,
+            r.status AS request_status,
+            res.status AS resource_status,
             res.name AS resource_name
         FROM assignments a
         LEFT JOIN requests r ON r.id = a.request_id
@@ -337,10 +322,13 @@ def get_assignments():
                 "id": row["id"],
                 "request_id": row["request_id"],
                 "resource_id": row["resource_id"],
+                "algorithm": row["algorithm_used"] or "N/A",
                 "algorithm_used": row["algorithm_used"] or "N/A",
                 "assigned_at": row["assigned_at"],
                 "request_type": row["complaint_type"] or "N/A",
                 "resource_name": row["resource_name"] or "N/A",
+                "request_status": (row["request_status"] or "pending").strip().lower(),
+                "resource_status": (row["resource_status"] or "maintenance").strip().lower(),
             }
         )
 
@@ -359,6 +347,14 @@ def create_request():
     location = (data.get("location") or "").strip()
     priority_level = normalize_priority(data.get("priority"))
 
+    raw_estimated_time = data.get("estimated_time", 1)
+    try:
+        estimated_time = int(raw_estimated_time)
+    except (TypeError, ValueError):
+        estimated_time = 1
+    if estimated_time <= 0:
+        estimated_time = 1
+
     if not complaint_type or not description or not location:
         return jsonify({"error": "complaint_type, description, and location are required"}), 400
 
@@ -370,10 +366,10 @@ def create_request():
 
     cursor = conn.execute(
         """
-        INSERT INTO requests (user_id, complaint_type, priority, description, location, status)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO requests (user_id, complaint_type, priority, estimated_time, description, location, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (user_id, complaint_type, priority_level, description, location, "pending"),
+        (user_id, complaint_type, priority_level, estimated_time, description, location, "pending"),
     )
     conn.commit()
     created_id = cursor.lastrowid
@@ -387,25 +383,87 @@ def run_scheduler():
     if session.get("role") != "ADMIN":
         return jsonify({"error": "Unauthorized"}), 403
 
-    pending_requests = get_pending_requests()
-    free_resources = get_free_resources()
-    assignments = priority_scheduler(pending_requests, free_resources)
+    try:
+        payload = request.get_json(silent=True) or {}
+        algorithm = (payload.get("algorithm") or "priority").strip().lower()
 
-    if not assignments:
-        return jsonify({"message": "No assignments generated"}), 200
+        scheduler_map = {
+            "priority": priority_scheduler,
+            "sjf": sjf_scheduler,
+            "greedy": greedy_scheduler,
+        }
 
-    for assignment in assignments:
-        request_id = assignment.get("request_id")
-        resource_id = assignment.get("resource_id")
-        if request_id is None or resource_id is None:
-            continue
+        scheduler_fn = scheduler_map.get(algorithm)
+        if scheduler_fn is None:
+            return jsonify({"error": "Unsupported algorithm", "supported": list(scheduler_map.keys())}), 400
 
-        update_request_status(request_id, "scheduled")
-        update_resource_status(resource_id, "busy")
-        insert_assignment(request_id, resource_id, "priority")
-        insert_log(f"Assigned request {request_id} to resource {resource_id} using priority")
+        pending_requests = get_pending_requests()
+        free_resources = get_free_resources()
+        assignments = scheduler_fn(pending_requests, free_resources)
 
-    return jsonify({"message": "Success"}), 200
+        if not assignments:
+            return jsonify({"message": "No assignments generated", "algorithm": algorithm}), 200
+
+        result = apply_scheduler_assignments(assignments, algorithm)
+        if not result.get("success"):
+            return jsonify({"error": "Scheduler transaction failed", "details": result.get("error")}), 500
+
+        return (
+            jsonify(
+                {
+                    "message": "Success",
+                    "algorithm": algorithm,
+                    "assigned_count": result.get("assigned_count", 0),
+                    "skipped_count": result.get("skipped_count", 0),
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "Scheduler failed", "details": str(e)}), 500
+
+
+@auth_bp.route("/api/requests/complete", methods=["POST"])
+def complete_request():
+    if session.get("role") != "ADMIN":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    request_value = payload.get("request_id")
+
+    if request_value is None:
+        return jsonify({"error": "request_id is required"}), 400
+
+    request_id = None
+    if isinstance(request_value, int):
+        request_id = request_value
+    elif isinstance(request_value, str):
+        stripped = request_value.strip()
+        if stripped.upper().startswith("REQ-"):
+            numeric_part = stripped[4:]
+            if numeric_part.isdigit():
+                request_id = int(numeric_part)
+        elif stripped.isdigit():
+            request_id = int(stripped)
+
+    if request_id is None:
+        return jsonify({"error": "invalid request_id"}), 400
+
+    result = complete_request_and_release_resource(request_id)
+    if not result.get("success"):
+        return jsonify({"error": "Unable to complete request", "details": result.get("error")}), 400
+
+    return jsonify({"message": "Success", "request_id": request_id, "resource_id": result.get("resource_id")}), 200
+
+
+@auth_bp.route("/api/logs", methods=["GET"])
+def get_logs():
+    if session.get("role") != "ADMIN":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    logs = get_activity_logs()
+    return jsonify({"logs": logs}), 200
 
 
 @auth_bp.route("/api/resources/update-status", methods=["POST"])

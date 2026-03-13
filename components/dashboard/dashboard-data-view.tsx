@@ -32,12 +32,21 @@ type AssignmentItem = {
   resource_name: string
   algorithm_used: string
   assigned_at: string
+  request_status?: string
+  resource_status?: string
+}
+
+type ActivityLogItem = {
+  id: number
+  message: string
+  created_at: string
 }
 
 export function DashboardDataView() {
   const [requests, setRequests] = useState<RequestItem[]>([])
   const [resources, setResources] = useState<ResourceItem[]>([])
   const [assignments, setAssignments] = useState<AssignmentItem[]>([])
+  const [logs, setLogs] = useState<ActivityLogItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState("")
 
@@ -46,7 +55,7 @@ export function DashboardDataView() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setErrorMessage("")
-      const [requestsRes, resourcesRes, assignmentsRes] = await Promise.all([
+      const [requestsRes, resourcesRes, assignmentsRes, logsRes] = await Promise.all([
         fetch(`${apiBaseUrl}/api/requests`, {
           method: "GET",
           credentials: "include",
@@ -59,9 +68,13 @@ export function DashboardDataView() {
           method: "GET",
           credentials: "include",
         }),
+        fetch(`${apiBaseUrl}/api/logs`, {
+          method: "GET",
+          credentials: "include",
+        }),
       ])
 
-      if (!requestsRes.ok || !resourcesRes.ok || !assignmentsRes.ok) {
+      if (!requestsRes.ok || !resourcesRes.ok || !assignmentsRes.ok || !logsRes.ok) {
         throw new Error("Unable to load dashboard data")
       }
 
@@ -70,10 +83,12 @@ export function DashboardDataView() {
       const assignmentsJson = (await assignmentsRes.json()) as {
         assignments?: AssignmentItem[]
       }
+      const logsJson = (await logsRes.json()) as { logs?: ActivityLogItem[] }
 
       setRequests(requestsJson.requests ?? [])
       setResources(resourcesJson.resources ?? [])
       setAssignments(assignmentsJson.assignments ?? [])
+      setLogs(logsJson.logs ?? [])
     } catch {
       setErrorMessage("Failed to load dashboard data. Please try again.")
     } finally {
@@ -95,9 +110,7 @@ export function DashboardDataView() {
   )
 
   const availableResourcesCount = useMemo(
-    () =>
-      resources.filter((resource) => resource.status.toLowerCase() === "available")
-        .length,
+    () => resources.filter((resource) => resource.status.toLowerCase() === "free").length,
     [resources]
   )
 
@@ -121,6 +134,8 @@ export function DashboardDataView() {
 
       <SchedulerPanel
         assignments={assignments}
+        logs={logs}
+        apiBaseUrl={apiBaseUrl}
         onRefresh={fetchDashboardData}
         isLoading={isLoading}
       />

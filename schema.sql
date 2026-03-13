@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS requests (
     user_id INTEGER NOT NULL,
     complaint_type TEXT NOT NULL,
     priority INTEGER NOT NULL,
+    estimated_time INTEGER DEFAULT 1,
     description TEXT,
     location TEXT,
     status TEXT DEFAULT 'pending',

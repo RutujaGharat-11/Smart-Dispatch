@@ -11,6 +11,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,46 +40,126 @@ type AssignmentLog = {
   resource_name: string
   algorithm_used: string
   assigned_at: string
+  request_status?: string
+  resource_status?: string
+}
+
+type ActivityLog = {
+  id: number
+  message: string
+  created_at: string
 }
 
 type SchedulerPanelProps = {
   assignments: AssignmentLog[]
+  logs: ActivityLog[]
+  apiBaseUrl: string
   onRefresh: () => Promise<void>
   isLoading?: boolean
 }
 
 export function SchedulerPanel({
   assignments,
+  logs,
+  apiBaseUrl,
   onRefresh,
   isLoading = false,
 }: SchedulerPanelProps) {
   const [algorithm, setAlgorithm] = useState("priority")
   const [isRunning, setIsRunning] = useState(false)
+  const [completingRequestId, setCompletingRequestId] = useState<number | null>(null)
+  const [actionError, setActionError] = useState("")
 
-  const logs = useMemo(() => {
-    if (assignments.length === 0) {
+  const activityMessages = useMemo(() => {
+    if (logs.length === 0) {
       return ["[System] No assignment activity yet."]
     }
 
-    return assignments.map((assignment) => {
-      const timestamp = assignment.assigned_at
-        ? new Date(assignment.assigned_at).toLocaleString()
+    return logs.map((logItem) => {
+      const timestamp = logItem.created_at
+        ? new Date(logItem.created_at).toLocaleString()
         : "Unknown time"
-      return `[${timestamp}] REQ-${String(assignment.request_id).padStart(3, "0")} -> ${assignment.resource_name} (Algorithm: ${assignment.algorithm_used})`
+      return `[${timestamp}] ${logItem.message}`
     })
-  }, [assignments])
+  }, [logs])
+
+  const scheduledAssignments = useMemo(
+    () => assignments.filter((assignment) => (assignment.request_status || "").toLowerCase() === "scheduled"),
+    [assignments]
+  )
 
   async function runScheduler() {
     setIsRunning(true)
+    setActionError("")
     try {
+      const response = await fetch(`${apiBaseUrl}/api/run_scheduler`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ algorithm }),
+      })
+
+      if (!response.ok) {
+        let apiErrorMessage = "Failed to run scheduler"
+        try {
+          const errorBody = (await response.json()) as {
+            error?: string
+            details?: string
+            message?: string
+          }
+          if (errorBody.error && errorBody.details) {
+            apiErrorMessage = `${errorBody.error}: ${errorBody.details}`
+          } else if (errorBody.error) {
+            apiErrorMessage = errorBody.error
+          } else if (errorBody.message) {
+            apiErrorMessage = errorBody.message
+          }
+        } catch {
+          // Ignore JSON parse issues and keep fallback message.
+        }
+        throw new Error(apiErrorMessage)
+      }
+
       await onRefresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to run scheduler. Please try again."
+      setActionError(message)
     } finally {
       setIsRunning(false)
     }
   }
 
+  async function markAsCompleted(requestId: number) {
+    setCompletingRequestId(requestId)
+    setActionError("")
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/requests/complete`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ request_id: requestId }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to complete request")
+      }
+
+      await onRefresh()
+    } catch {
+      setActionError("Unable to complete request. Please try again.")
+    } finally {
+      setCompletingRequestId(null)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
+
       {/* Control Panel */}
       <Card className="border-border bg-card shadow-sm">
         <CardHeader>
@@ -115,6 +203,68 @@ export function SchedulerPanel({
         </CardContent>
       </Card>
 
+      <Card className="border-border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Scheduled Requests</CardTitle>
+          <CardDescription>
+            Mark scheduled requests as completed to free the assigned resource.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Request</TableHead>
+                  <TableHead>Resource</TableHead>
+                  <TableHead>Algorithm</TableHead>
+                  <TableHead>Assigned At</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {scheduledAssignments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No scheduled requests available.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  scheduledAssignments.map((assignment) => (
+                    <TableRow key={assignment.id}>
+                      <TableCell className="font-mono text-sm">
+                        REQ-{String(assignment.request_id).padStart(3, "0")}
+                      </TableCell>
+                      <TableCell>{assignment.resource_name}</TableCell>
+                      <TableCell className="capitalize">{assignment.algorithm_used}</TableCell>
+                      <TableCell>
+                        {assignment.assigned_at
+                          ? new Date(assignment.assigned_at).toLocaleString()
+                          : "Unknown"}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            markAsCompleted(assignment.request_id)
+                          }}
+                          disabled={completingRequestId === assignment.request_id || isLoading}
+                        >
+                          {completingRequestId === assignment.request_id
+                            ? "Completing..."
+                            : "Mark as Completed"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Activity Logs */}
       <Card className="border-border bg-card shadow-sm">
         <CardHeader>
@@ -126,7 +276,7 @@ export function SchedulerPanel({
         <CardContent>
           <ScrollArea className="h-64 rounded-lg border border-border bg-secondary p-4">
             <div className="flex flex-col gap-1">
-              {logs.map((log, i) => (
+              {activityMessages.map((log, i) => (
                 <p
                   key={i}
                   className={`font-mono text-xs leading-relaxed ${

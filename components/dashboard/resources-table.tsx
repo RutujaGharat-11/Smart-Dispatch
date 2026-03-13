@@ -25,9 +25,25 @@ type Resource = {
 }
 
 function getStatusColor(status: string) {
-  return status === "Available"
-    ? "bg-green-100 text-green-800"
-    : "bg-red-100 text-red-800"
+  const normalized = status.trim().toLowerCase()
+  if (normalized === "free") {
+    return "bg-green-100 text-green-800"
+  }
+  if (normalized === "busy") {
+    return "bg-yellow-100 text-yellow-800"
+  }
+  return "bg-red-100 text-red-800"
+}
+
+function formatStatus(status: string) {
+  const normalized = status.trim().toLowerCase()
+  if (normalized === "free") {
+    return "Free"
+  }
+  if (normalized === "busy") {
+    return "Busy"
+  }
+  return "Maintenance"
 }
 
 type ResourcesTableProps = {
@@ -87,7 +103,7 @@ export function ResourcesTable({
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(res.status)}`}
                       >
-                        {res.status}
+                        {formatStatus(res.status)}
                       </span>
                     </TableCell>
                   </TableRow>

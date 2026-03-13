@@ -50,14 +50,6 @@ function normalizeStatus(status: string): ResourceStatus {
     return normalized
   }
 
-  if (normalized === "available") {
-    return "free"
-  }
-
-  if (normalized === "unavailable") {
-    return "maintenance"
-  }
-
   return "maintenance"
 }
 

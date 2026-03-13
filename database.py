@@ -16,6 +16,15 @@ def init_db():
         if 'role' not in columns:
             cursor.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'USER'")
             conn.commit()
+
+        cursor.execute("PRAGMA table_info(requests)")
+        request_columns = [col[1] for col in cursor.fetchall()]
+        if "estimated_time" not in request_columns:
+            cursor.execute("ALTER TABLE requests ADD COLUMN estimated_time INTEGER DEFAULT 1")
+            conn.commit()
+
+        cursor.execute("UPDATE requests SET estimated_time = 1 WHERE estimated_time IS NULL")
+        conn.commit()
             
         # Insert 3 default admin accounts safely
         admins = [
@@ -38,9 +47,8 @@ def init_db():
             """
             UPDATE resources
             SET status = CASE
-                WHEN lower(status) = 'available' THEN 'free'
-                WHEN lower(status) = 'unavailable' THEN 'maintenance'
-                ELSE status
+                WHEN lower(status) IN ('free', 'busy', 'maintenance') THEN lower(status)
+                ELSE 'maintenance'
             END
             """
         )
