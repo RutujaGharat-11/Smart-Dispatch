@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import styles from './Signup.module.css'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -60,93 +62,99 @@ export default function SignupPage() {
   }
 
   return (
-    <section className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-8 col-lg-6">
-          <div className="card shadow-sm border-0">
-            <div className="card-body p-4 p-md-5">
-              <h1 className="h3 mb-2">Create Account</h1>
-              <p className="text-muted mb-4">Register to use SmartDispatch services.</p>
+    <section className={styles.page}>
+      <div className={styles.card}>
+        <div className={styles.cardInner}>
+          <h1 className={styles.title}>Create Account</h1>
+          <p className={styles.subtitle}>Register to use SmartDispatch services.</p>
 
-              {errorMessage ? (
-                <div className="alert alert-danger" role="alert">
-                  {errorMessage}
-                </div>
-              ) : null}
-
-              {successMessage ? (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
-                </div>
-              ) : null}
-
-              <form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
-                <div>
-                  <label htmlFor="username" className="form-label">
-                    Username
-                  </label>
-                  <input
-                    id="username"
-                    type="text"
-                    className="form-control"
-                    value={username}
-                    onChange={(event) => setUsername(event.target.value)}
-                    autoComplete="username"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="form-label">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    className="form-control"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="form-label">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    className="form-control"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    autoComplete="new-password"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="form-label">
-                    Confirm Password
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    className="form-control"
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                    autoComplete="new-password"
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating account...' : 'Create Account'}
-                </button>
-              </form>
-            </div>
+          <div className={`${styles.alert} ${errorMessage ? '' : styles.hidden}`} role="alert">
+            {errorMessage}
           </div>
+
+          <div className={`${styles.alertSuccess} ${successMessage ? '' : styles.hidden}`} role="alert">
+            {successMessage}
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.field}>
+              <label htmlFor="username" className={styles.label}>
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                className={styles.input}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
+                required
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="email" className={styles.label}>
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                className={styles.input}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="password" className={styles.label}>
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className={styles.input}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="new-password"
+                required
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="confirmPassword" className={styles.label}>
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                className={styles.input}
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+                required
+              />
+            </div>
+
+            <button type="submit" className={styles.button} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <span className={styles.spinner} aria-hidden="true" />
+                  Creating account...
+                </>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+
+            <p className={styles.signupText}>
+              Already have an account?{' '}
+              <Link href="/login" className={styles.signupLink}>
+                Login
+              </Link>
+            </p>
+          </form>
         </div>
       </div>
     </section>
