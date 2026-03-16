@@ -2,12 +2,13 @@ import sqlite3
 import os
 from werkzeug.security import generate_password_hash
 
-DB_NAME = "smartdispatch.db"
+DB_NAME = os.environ.get("DATABASE_PATH", "smartdispatch.db")
 
 def init_db():
     db_exists = os.path.exists(DB_NAME)
     with sqlite3.connect(DB_NAME) as conn:
-        with open("schema.sql") as f:
+        schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
+        with open(schema_path) as f:
             conn.executescript(f.read())
             
         cursor = conn.cursor()

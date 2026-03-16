@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: smartdispatch-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FRONTEND_URL
+        value: "https://your-frontend-url.vercel.app" # UPDATE THIS AFTER DEPLOYING NEXT.JS
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SESSION_COOKIE_SAMESITE
+        value: "None"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: DATABASE_PATH
+        value: "/opt/render/project/src/data/smartdispatch.db"
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

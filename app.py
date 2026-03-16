@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from auth import auth_bp
@@ -8,15 +9,20 @@ app = Flask(__name__)
 init_db()
 
 # Secret key for session
-app.secret_key = "smartdispatch-secret-key"
-app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.secret_key = os.environ.get("SECRET_KEY", "smartdispatch-secret-key")
+app.config["SESSION_COOKIE_SAMESITE"] = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE", "False").lower() in ("true", "1", "yes")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
-# Allow Next.js (port 3000)
+# Allow origins from environment variable, fallback to localhost:3000
+frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+allowed_origins = [origin.strip() for origin in frontend_url.split(",")]
+
+# Allow Next.js requests with credentials (cookies)
 CORS(
     app,
     supports_credentials=True,
-    origins=["http://localhost:3000"],
+    origins=allowed_origins,
 )
 
 # Register routes
@@ -27,4 +33,5 @@ def home():
     return {"message": "SmartDispatch Backend Running"}
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
