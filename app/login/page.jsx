@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './Login.module.css'
+import { getApiBaseUrl } from '@/lib/api'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -15,7 +16,7 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState('USER')
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  const apiBaseUrl = getApiBaseUrl()
 
   useEffect(() => {
     let isMounted = true

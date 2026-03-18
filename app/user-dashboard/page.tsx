@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import { getApiBaseUrl } from "@/lib/api"
 import {
     Card,
     CardContent,
@@ -59,7 +60,7 @@ export default function UserDashboardPage() {
 
     useEffect(() => {
         let isMounted = true
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+        const apiBaseUrl = getApiBaseUrl()
 
         const fetchUserDashboard = async () => {
             try {

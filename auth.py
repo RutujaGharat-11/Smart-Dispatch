@@ -15,7 +15,10 @@ from scheduler.os_engine import priority_scheduler, sjf_scheduler, greedy_schedu
 
 auth_bp = Blueprint("auth", __name__)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "smartdispatch.db")
+DB_PATH = os.environ.get(
+    "DATABASE_PATH",
+    os.path.join(os.path.dirname(__file__), "smartdispatch.db"),
+)
 
 
 def get_db_connection():

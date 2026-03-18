@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { getApiBaseUrl } from "@/lib/api"
 
 type ResourceStatus = "free" | "busy" | "maintenance"
 
@@ -59,7 +60,7 @@ export function ManageResourcesView() {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState("")
   const [updatingResourceId, setUpdatingResourceId] = useState<number | null>(null)
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  const apiBaseUrl = getApiBaseUrl()
 
   const fetchResources = useCallback(async () => {
     const response = await fetch(`${apiBaseUrl}/api/resources`, {

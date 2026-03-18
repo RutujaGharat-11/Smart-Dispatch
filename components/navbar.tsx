@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Menu, X, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { getApiBaseUrl } from "@/lib/api"
 
 const adminLinks = [
   { href: "/", label: "Home" },
@@ -32,7 +33,7 @@ export function Navbar() {
   const [authenticated, setAuthenticated] = useState(false)
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  const apiBaseUrl = getApiBaseUrl()
   const visibleLinks = !authenticated
       ? guestLinks
       : role === "USER"

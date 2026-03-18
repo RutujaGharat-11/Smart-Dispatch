@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from './Signup.module.css'
+import { getApiBaseUrl } from '@/lib/api'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -15,7 +16,7 @@ export default function SignupPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  const apiBaseUrl = getApiBaseUrl()
 
   const handleSubmit = async (event) => {
     event.preventDefault()

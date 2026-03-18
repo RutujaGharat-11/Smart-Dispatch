@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { getApiBaseUrl } from "@/lib/api"
 
 const complaintTypes = [
   "Garbage",
@@ -41,7 +42,7 @@ export function RequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  const apiBaseUrl = getApiBaseUrl()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { getApiBaseUrl } from "@/lib/api"
 
 type AuthGuardProps = {
   children: React.ReactNode
@@ -14,7 +15,7 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
 
   useEffect(() => {
     let isMounted = true
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+    const apiBaseUrl = getApiBaseUrl()
 
     const validateSession = async () => {
       try {

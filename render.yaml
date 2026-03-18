@@ -8,7 +8,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: FRONTEND_URL
-        value: "https://your-frontend-url.vercel.app" # UPDATE THIS AFTER DEPLOYING NEXT.JS
+        value: "https://smart-dispatch-psi.vercel.app"
       - key: SECRET_KEY
         generateValue: true
       - key: SESSION_COOKIE_SAMESITE

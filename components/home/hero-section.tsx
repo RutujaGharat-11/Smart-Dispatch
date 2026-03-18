@@ -4,11 +4,12 @@ import Link from "next/link"
 import { ArrowRight, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
+import { getApiBaseUrl } from "@/lib/api"
 
 export function HeroSection() {
   const [authenticated, setAuthenticated] = useState(false)
   const [role, setRole] = useState<string | null>(null)
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  const apiBaseUrl = getApiBaseUrl()
 
   useEffect(() => {
     let isMounted = true

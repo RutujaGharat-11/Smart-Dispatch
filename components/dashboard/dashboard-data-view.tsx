@@ -5,6 +5,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards"
 import { PendingRequestsTable } from "@/components/dashboard/pending-requests-table"
 import { ResourcesTable } from "@/components/dashboard/resources-table"
 import { SchedulerPanel } from "@/components/dashboard/scheduler-panel"
+import { getApiBaseUrl } from "@/lib/api"
 
 type RequestItem = {
   id: number
@@ -50,7 +51,7 @@ export function DashboardDataView() {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState("")
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  const apiBaseUrl = getApiBaseUrl()
 
   const fetchDashboardData = useCallback(async () => {
     try {

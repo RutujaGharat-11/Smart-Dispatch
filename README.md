@@ -98,7 +98,11 @@ Frontend runs at: `http://localhost:3000`
 
 ## 🔐 Auth Notes
 
-- Frontend expects backend base URL through `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:5000` in code).
+- Frontend uses same-origin `/api/*` calls by default.
+- Next.js rewrites `/api/:path*` to backend URL from `BACKEND_URL` (or `NEXT_PUBLIC_API_URL`) in `next.config.mjs`.
+- For Vercel deployment, set `BACKEND_URL=https://<your-render-service>.onrender.com`.
+- For Render deployment, set `FRONTEND_URL=https://<your-vercel-domain>.vercel.app` (or comma-separated domains).
+- For cross-site cookies on Render, ensure `SESSION_COOKIE_SAMESITE=None` and `SESSION_COOKIE_SECURE=True`.
 - Login endpoint: `/api/login`
 - Check session endpoint: `/api/check-auth`
 - Logout endpoint: `/api/logout`
