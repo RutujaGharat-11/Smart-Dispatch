@@ -17,6 +17,8 @@ services:
         value: "True"
       - key: DATABASE_PATH
         value: "/opt/render/project/src/data/smartdispatch.db"
+      - key: CLEAN_PREDEPLOY_TEST_DATA
+        value: "True"
     disk:
       name: sqlite-data
       mountPath: /opt/render/project/src/data

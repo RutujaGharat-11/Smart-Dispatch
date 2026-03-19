@@ -4,6 +4,37 @@ from werkzeug.security import generate_password_hash
 
 DB_NAME = os.environ.get("DATABASE_PATH", "smartdispatch.db")
 
+
+def should_run_one_time_cleanup():
+    cleanup_enabled = os.environ.get("CLEAN_PREDEPLOY_TEST_DATA", "False").strip().lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+    if not cleanup_enabled:
+        return False, ""
+
+    db_dir = os.path.dirname(DB_NAME) or "."
+    marker_path = os.path.join(db_dir, ".cleanup_predeploy_done")
+    return not os.path.exists(marker_path), marker_path
+
+
+def run_one_time_cleanup(conn):
+    cursor = conn.cursor()
+
+    # Remove transactional test data from pre-deployment runs.
+    cursor.execute("DELETE FROM assignments")
+    cursor.execute("DELETE FROM requests")
+    cursor.execute("DELETE FROM logs")
+
+    # Keep admin users and remove regular user test accounts.
+    cursor.execute("DELETE FROM users WHERE upper(coalesce(role, 'USER')) != 'ADMIN'")
+
+    # Ensure all resources are reset to free state.
+    cursor.execute("UPDATE resources SET status = 'free', current_request_id = NULL")
+    conn.commit()
+
 def init_db():
     db_exists = os.path.exists(DB_NAME)
     with sqlite3.connect(DB_NAME) as conn:
@@ -54,6 +85,12 @@ def init_db():
             """
         )
         conn.commit()
+
+        should_cleanup, marker_path = should_run_one_time_cleanup()
+        if should_cleanup:
+            run_one_time_cleanup(conn)
+            with open(marker_path, "w", encoding="utf-8") as marker_file:
+                marker_file.write("cleanup completed\n")
 
     if db_exists:
         print("Database schema verified successfully.")
