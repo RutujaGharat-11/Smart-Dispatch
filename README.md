@@ -113,13 +113,13 @@ SmartDispatch/
 
 ## 📸 Screenshots
 -User Dashboard
-[User Dashboard.png]
+[User_Dashboard.jpg]
 
 - Admin Dashboard
-[Admin Dashboard.png]
+[Admin_Dashboard.jpg]
 
 - Scheduler
-  [scheduler.png]
+  [scheduler.jpg]
   
 ---
 
