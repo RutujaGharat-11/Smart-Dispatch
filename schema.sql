@@ -81,3 +81,15 @@ SELECT 'Agriculture Officer D', 'Agriculture'
 WHERE NOT EXISTS (
     SELECT 1 FROM resources WHERE name = 'Agriculture Officer D'
 );
+
+INSERT INTO resources (name, resource_type)
+SELECT 'Police Unit E', 'police'
+WHERE NOT EXISTS (
+    SELECT 1 FROM resources WHERE name = 'Police Unit E'
+);
+
+INSERT INTO resources (name, resource_type)
+SELECT 'Fire Service F', 'fire_service'
+WHERE NOT EXISTS (
+    SELECT 1 FROM resources WHERE name = 'Fire Service F'
+);

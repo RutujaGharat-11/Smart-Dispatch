@@ -26,6 +26,8 @@ const complaintTypes = [
   "Garbage",
   "Water Tanker",
   "Ambulance",
+  "Fire Service",
+  "Police",
   "Agriculture Officer",
 ]
 

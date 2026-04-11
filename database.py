@@ -35,6 +35,59 @@ def run_one_time_cleanup(conn):
     cursor.execute("UPDATE resources SET status = 'free', current_request_id = NULL")
     conn.commit()
 
+
+def seed_emergency_sample_requests(conn):
+    cursor = conn.cursor()
+
+    admin_row = cursor.execute(
+        "SELECT id FROM users WHERE upper(coalesce(role, 'USER')) = 'ADMIN' ORDER BY id ASC LIMIT 1"
+    ).fetchone()
+    if not admin_row:
+        return
+
+    user_id = admin_row[0]
+
+    sample_requests = [
+        (
+            "Police",
+            3,
+            2,
+            "Sample police dispatch request",
+            "Zone-Sample-Police",
+        ),
+        (
+            "Fire Service",
+            4,
+            3,
+            "Sample fire service emergency request",
+            "Zone-Sample-Fire",
+        ),
+    ]
+
+    for complaint_type, priority, estimated_time, description, location in sample_requests:
+        exists = cursor.execute(
+            """
+            SELECT 1
+            FROM requests
+            WHERE lower(complaint_type) = lower(?) AND location = ?
+            LIMIT 1
+            """,
+            (complaint_type, location),
+        ).fetchone()
+
+        if exists:
+            continue
+
+        cursor.execute(
+            """
+            INSERT INTO requests (user_id, complaint_type, priority, estimated_time, description, location, status)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending')
+            """,
+            (user_id, complaint_type, priority, estimated_time, description, location),
+        )
+
+    conn.commit()
+
 def init_db():
     db_exists = os.path.exists(DB_NAME)
     with sqlite3.connect(DB_NAME) as conn:
@@ -74,6 +127,9 @@ def init_db():
                     "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
                     (username, email, password_hash, role)
                 )
+
+        conn.commit()
+        seed_emergency_sample_requests(conn)
 
         cursor.execute(
             """
