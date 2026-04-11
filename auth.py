@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import traceback
+from datetime import datetime, timezone
 from flask import Blueprint, request, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from scheduler.service import (
@@ -11,7 +12,14 @@ from scheduler.service import (
     complete_request_and_release_resource,
     get_activity_logs,
 )
-from scheduler.os_engine import priority_scheduler, sjf_scheduler, greedy_scheduler
+from scheduler.os_engine import (
+    priority_scheduler,
+    sjf_scheduler,
+    greedy_scheduler,
+    determine_highest_class,
+    normalize_resource_type,
+    get_class_of_service,
+)
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -45,6 +53,29 @@ LEVEL_TO_PRIORITY = {
     3: "High",
     4: "Critical",
 }
+
+
+def _to_datetime(value):
+    if not value:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _waiting_time_minutes(created_at):
+    created_dt = _to_datetime(created_at)
+    if created_dt is None:
+        return 0
+
+    delta_seconds = (datetime.now(timezone.utc) - created_dt).total_seconds()
+    return max(0, int(delta_seconds // 60))
 
 
 def normalize_priority(priority_value):
@@ -214,6 +245,7 @@ def get_requests():
             r.id,
             r.complaint_type,
             r.priority,
+            r.estimated_time,
             r.description,
             r.location,
             r.status,
@@ -229,6 +261,11 @@ def get_requests():
     requests_payload = []
     for row in rows:
         priority_level = row["priority"] if isinstance(row["priority"], int) else normalize_priority(row["priority"])
+        execution_time = row["estimated_time"] if row["estimated_time"] is not None else 1
+        resource_type = normalize_resource_type(row["complaint_type"])
+        class_of_service = get_class_of_service(resource_type)
+        waiting_time = _waiting_time_minutes(row["created_at"])
+
         requests_payload.append(
             {
                 "id": row["id"],
@@ -237,6 +274,10 @@ def get_requests():
                 "type": row["complaint_type"],
                 "priority": LEVEL_TO_PRIORITY.get(priority_level, "Medium"),
                 "priority_level": priority_level,
+                "execution_time": execution_time,
+                "resource_type": resource_type,
+                "class_of_service": class_of_service,
+                "waiting_time": waiting_time,
                 "location": row["location"] or "N/A",
                 "description": row["description"] or "",
                 "status": (row["status"] or "pending").strip().lower(),
@@ -402,10 +443,22 @@ def run_scheduler():
 
         pending_requests = get_pending_requests()
         free_resources = get_free_resources()
+        selected_class = determine_highest_class(pending_requests)
+        selected_class_request_count = len(
+            [req for req in pending_requests if req.get("class_of_service") == selected_class]
+        ) if selected_class else 0
+
         assignments = scheduler_fn(pending_requests, free_resources)
 
         if not assignments:
-            return jsonify({"message": "No assignments generated", "algorithm": algorithm}), 200
+            return jsonify(
+                {
+                    "message": "No assignments generated",
+                    "algorithm": algorithm,
+                    "selected_class": selected_class,
+                    "selected_class_request_count": selected_class_request_count,
+                }
+            ), 200
 
         result = apply_scheduler_assignments(assignments, algorithm)
         if not result.get("success"):
@@ -416,6 +469,8 @@ def run_scheduler():
                 {
                     "message": "Success",
                     "algorithm": algorithm,
+                    "selected_class": selected_class,
+                    "selected_class_request_count": selected_class_request_count,
                     "assigned_count": result.get("assigned_count", 0),
                     "skipped_count": result.get("skipped_count", 0),
                 }

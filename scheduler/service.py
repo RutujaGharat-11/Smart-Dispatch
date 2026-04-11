@@ -1,8 +1,38 @@
 import os
 import sqlite3
+from datetime import datetime, timezone
+from scheduler.os_engine import normalize_resource_type, get_class_of_service
 
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "smartdispatch.db")
+
+
+def _normalize_text(value):
+    return str(value or "").strip().lower()
+
+
+def _to_datetime(value):
+    if not value:
+        return None
+
+    try:
+        # SQLite stores timestamps like "YYYY-MM-DD HH:MM:SS".
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _waiting_time_minutes(created_at):
+    created_dt = _to_datetime(created_at)
+    if created_dt is None:
+        return 0
+
+    delta_seconds = (datetime.now(timezone.utc) - created_dt).total_seconds()
+    return max(0, int(delta_seconds // 60))
 
 
 def _get_db_connection():
@@ -15,7 +45,7 @@ def get_pending_requests():
     conn = _get_db_connection()
     rows = conn.execute(
         """
-        SELECT id, complaint_type, priority, estimated_time
+        SELECT id, complaint_type, priority, estimated_time, created_at
         FROM requests
         WHERE lower(status) = 'pending'
         ORDER BY created_at ASC, id ASC
@@ -42,6 +72,9 @@ def get_pending_requests():
                 estimated_time_value = 1
 
         complaint_type = row["complaint_type"]
+        resource_type = normalize_resource_type(complaint_type)
+        class_of_service = get_class_of_service(resource_type)
+        waiting_time = _waiting_time_minutes(row["created_at"])
 
         # Keep compatibility aliases while returning the normalized scheduler shape.
         normalized_requests.append(
@@ -50,8 +83,13 @@ def get_pending_requests():
                 "priority": priority_value,
                 "type": complaint_type,
                 "estimated_time": estimated_time_value,
+                "execution_time": estimated_time_value,
+                "resource_type": resource_type,
+                "class_of_service": class_of_service,
+                "waiting_time": waiting_time,
                 "id": request_id,
                 "complaint_type": complaint_type,
+                "created_at": row["created_at"],
             }
         )
 
