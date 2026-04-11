@@ -1,12 +1,8 @@
-# 🚀 SmartDispatch
+## 🚀 SmartDispatch – Intelligent Resource Allocation System
 
-SmartDispatch is a role-based public resource scheduling platform with:
-- **Next.js (App Router)** frontend
-- **Flask + SQLite** backend
+A full-stack system that optimizes public resource allocation using Operating System scheduling algorithms with anti-starvation techniques.
 
-Users can submit requests and track their own request status. Admins can monitor requests, manage resource availability, and run scheduling operations.
-
----
+🔗 Live Demo: https://smart-dispatch-o7y0mkzja-rutujagharat-11s-projects.vercel.app
 
 ## ✨ Features
 
