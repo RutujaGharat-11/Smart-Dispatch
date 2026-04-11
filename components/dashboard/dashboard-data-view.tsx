@@ -13,6 +13,10 @@ type RequestItem = {
   name: string
   type: string
   priority: string
+  execution_time?: number
+  resource_type?: string
+  class_of_service?: "CRITICAL" | "HIGH" | "NORMAL" | "LOW" | string
+  waiting_time?: number
   location: string
   status: string
 }

@@ -50,6 +50,15 @@ type ActivityLog = {
   created_at: string
 }
 
+type SchedulerRunResult = {
+  algorithm?: string
+  selected_class?: string | null
+  selected_class_request_count?: number
+  assigned_count?: number
+  skipped_count?: number
+  message?: string
+}
+
 type SchedulerPanelProps = {
   assignments: AssignmentLog[]
   logs: ActivityLog[]
@@ -69,6 +78,7 @@ export function SchedulerPanel({
   const [isRunning, setIsRunning] = useState(false)
   const [completingRequestId, setCompletingRequestId] = useState<number | null>(null)
   const [actionError, setActionError] = useState("")
+  const [lastRunResult, setLastRunResult] = useState<SchedulerRunResult | null>(null)
 
   const activityMessages = useMemo(() => {
     if (logs.length === 0) {
@@ -121,6 +131,9 @@ export function SchedulerPanel({
         }
         throw new Error(apiErrorMessage)
       }
+
+      const runResult = (await response.json()) as SchedulerRunResult
+      setLastRunResult(runResult)
 
       await onRefresh()
     } catch (error) {
@@ -202,6 +215,45 @@ export function SchedulerPanel({
           </div>
         </CardContent>
       </Card>
+
+      {lastRunResult ? (
+        <Card className="border-border bg-card shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-card-foreground">Last Scheduler Run</CardTitle>
+            <CardDescription>
+              Latest class-aware dispatch result from the scheduling engine.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              <p>
+                <span className="font-semibold text-foreground">Algorithm: </span>
+                <span className="capitalize text-muted-foreground">{lastRunResult.algorithm || algorithm}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">Selected Class: </span>
+                <span className="text-muted-foreground">{lastRunResult.selected_class || "None"}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">Class Queue Size: </span>
+                <span className="text-muted-foreground">{lastRunResult.selected_class_request_count ?? 0}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">Assigned: </span>
+                <span className="text-muted-foreground">{lastRunResult.assigned_count ?? 0}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">Skipped: </span>
+                <span className="text-muted-foreground">{lastRunResult.skipped_count ?? 0}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">Status: </span>
+                <span className="text-muted-foreground">{lastRunResult.message || "Completed"}</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="border-border bg-card shadow-sm">
         <CardHeader>
