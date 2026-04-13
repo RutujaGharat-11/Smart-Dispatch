@@ -112,15 +112,15 @@ SmartDispatch/
 ---
 
 ## 📸 Screenshots
--User Dashboard
-[User_Dashboard.jpg]
 
-- Admin Dashboard
-[Admin_Dashboard.jpg]
+### 👤 User Dashboard
+![User Dashboard](User_Dashboard.jpg)
 
-- Scheduler
-  [scheduler.jpg]
-  
+### 🛠️ Admin Dashboard
+![Admin Dashboard](Admin_Dashboard.jpg)
+
+### ⚙️ Scheduler
+![Scheduler](scheduler.jpg)
 ---
 
 ## ⚙️ Run Locally
