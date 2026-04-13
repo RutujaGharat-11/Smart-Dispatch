@@ -2,7 +2,7 @@
 
 SmartDispatch is a full-stack web application designed to optimize public resource allocation using Operating System scheduling concepts. It simulates real-world dispatch systems (like police/fire services) with role-based access, dynamic resource management, and algorithm-driven task assignment.
 
-🔗 **Live Demo:** https://smart-dispatch-six.vercel.app  
+🔗 **Live Demo:** https://smart-dispatch-o7y0mkzja-rutujagharat-11s-projects.vercel.app/
 
 ---
 
